@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Dentist Admin Dashboard</title>
+
+    <!-- Font Awesome Icons & Stylesheet -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="dashboard-body">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <img src="image/logo-icon.png" alt="Oralux Dental Clinic logo">
+            <h2>Dental Admin</h2>
+        </div>
+        <ul>
+            <li><a href="index.html" class="active"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+            <li><a href="appointment.html"><i class="fa-solid fa-calendar-check"></i> Appointments</a></li>
+            <li><a href="patient.html"><i class="fa-solid fa-user-group"></i> Patients</a></li>
+            <li><a href="history.html"><i class="fa-solid fa-calendar-days"></i> Appointment Schedule</a></li>
+            <li><a href="reports.html"><i class="fa-solid fa-chart-pie"></i> Reports</a></li>
+            <li><a href="documents.html"><i class="fa-solid fa-file-waveform"></i> Prescriptions &amp; Certificates</a></li>
+            <li id="staffNavItem" style="display: none;"><a href="staff.html"><i class="fa-solid fa-user-shield"></i> Staff <span class="nav-badge" id="navPendingBadge" style="display: none;">0</span></a></li>
+            <li><a href="#" onclick="event.preventDefault(); logout();"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+
+        <!-- HEADER & QUICK ACTIONS -->
+        <div class="header" style="display: flex; justify-content: space-between; align-items: center;">
+            <div>
+                <p class="welcome-line" id="welcomeLine" style="display: none;">
+                    Welcome back, <strong id="welcomeUsername"></strong>
+                    <span class="welcome-role" id="welcomeRole"></span>
+                </p>
+                <h1 id="dashboardTitle">Dashboard</h1>
+                <p>Overview of clinic performance and schedule</p>
+            </div>
+            <div style="display: flex; gap: 12px;">
+                <a href="appointment.html" class="add-appointment-btn" style="text-decoration: none; display: inline-flex; align-items: center; gap: 8px;">
+                    <i class="fa-solid fa-plus"></i> Book Appointment
+                </a>
+            </div>
+        </div>
+
+        <!-- DYNAMIC STAT CARDS -->
+        <div class="cards">
+            <div class="card stat-card stat-card-teal">
+                <div class="stat-card-icon"><i class="fa-solid fa-user-group"></i></div>
+                <h3>Total Patients</h3>
+                <p id="patientCount">0</p>
+                <i class="fa-solid fa-user-group stat-card-ghost"></i>
+            </div>
+
+            <div class="card stat-card stat-card-plum">
+                <div class="stat-card-icon"><i class="fa-solid fa-calendar-check"></i></div>
+                <h3>Today's Appointments</h3>
+                <p id="appointmentCount">0</p>
+                <i class="fa-solid fa-calendar-check stat-card-ghost"></i>
+            </div>
+
+            <div class="card stat-card stat-card-slate">
+                <div class="stat-card-icon"><i class="fa-solid fa-door-open"></i></div>
+                <h3>Available Slots</h3>
+                <p id="availableSlots">10</p>
+                <i class="fa-solid fa-door-open stat-card-ghost"></i>
+            </div>
+        </div>
+
+        <!-- CHARTS SECTION -->
+        <div class="charts-grid">
+            <!-- Monthly earnings: admin only (revealed by script.js) -->
+            <div class="chart-card earning-card" id="earningCard" style="display: none;">
+                <h3 style="margin-bottom: 4px; font-weight: 600;">Earning</h3>
+                <div class="earning-tier">
+                    <p class="earning-amount" id="monthlyRevenue">₱0.00</p>
+                    <span class="earning-label">This Month So Far</span>
+                </div>
+                <div class="earning-divider"></div>
+                <div class="earning-tier">
+                    <p class="earning-amount" id="previousMonthRevenue">₱0.00</p>
+                    <span class="earning-label">Previous Month</span>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3 style="margin-bottom: 15px; font-weight: 600;">Weekly Appointments</h3>
+                <div style="position: relative; height: 240px; width: 100%;">
+                    <canvas id="weeklyChart"></canvas>
+                </div>
+            </div>
+
+            <div class="chart-card">
+                <h3 style="margin-bottom: 15px; font-weight: 600;">Treatments Overview</h3>
+                <div style="position: relative; height: 240px; width: 100%;">
+                    <canvas id="treatmentsChart"></canvas>
+                </div>
+            </div>
+        </div>
+
+        <!-- TODAY'S SCHEDULE TABLE -->
+        <div class="section" style="margin-top: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 700;">Today's Schedule Preview</h2>
+                <a href="history.html" style="color: var(--primary-color, #0284c7); font-weight: 600; text-decoration: none; font-size: 14px;">View all appointments</a>
+            </div>
+
+            <table id="dashboardTodayTable">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Client</th>
+                        <th>Service</th>
+                        <th>Status</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamically populated by JavaScript -->
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- SUPABASE, CHART.JS & SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+
+</body>
+
+</html>
