@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Staff - Dental Admin</title>
+
+    <!-- Font Awesome Icons & Stylesheet -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="dashboard-body">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <img src="image/logo-icon.png" alt="Oralux Dental Clinic logo">
+            <h2>Dental Admin</h2>
+        </div>
+        <ul>
+            <li><a href="index.html" class="active"><i class="fa-solid fa-chart-line"></i> Dashboard</a></li>
+            <li><a href="appointment.html"><i class="fa-solid fa-calendar-check"></i> Appointments</a></li>
+            <li><a href="patient.html"><i class="fa-solid fa-user-group"></i> Patients</a></li>
+            <li><a href="history.html"><i class="fa-solid fa-calendar-days"></i> Appointment Schedule</a></li>
+            <li><a href="reports.html"><i class="fa-solid fa-chart-pie"></i> Reports</a></li>
+            <li><a href="documents.html"><i class="fa-solid fa-file-waveform"></i> Prescriptions &amp; Certificates</a></li>
+            <li id="staffNavItem" style="display: none;"><a href="staff.html" class="active"><i class="fa-solid fa-user-shield"></i> Staff <span class="nav-badge" id="navPendingBadge" style="display: none;">0</span></a></li>
+            <li><a href="#" onclick="event.preventDefault(); logout();"><i class="fa-solid fa-right-from-bracket"></i> Logout</a></li>
+        </ul>
+    </div>
+
+    <!-- MAIN CONTENT -->
+    <div class="main">
+
+        <!-- HEADER -->
+        <div class="header">
+            <h1>Staff</h1>
+            <p>Approve new staff accounts and manage existing ones</p>
+        </div>
+
+        <!-- PENDING STAFF APPROVALS (admin only) -->
+        <div class="section" id="pendingApprovalsSection" style="margin-top: 0; margin-bottom: 30px; display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 700;">
+                    Pending Staff Approvals
+                    <span id="pendingApprovalsCount" style="display:inline-block; background:#ef4444; color:#fff; font-size:12px; font-weight:700; border-radius:999px; padding:2px 9px; margin-left:8px; vertical-align:middle;">0</span>
+                </h2>
+            </div>
+
+            <table id="pendingApprovalsTable">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Requested</th>
+                        <th style="width: 180px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamically populated by loadPendingApprovals() in script.js -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- STAFF MANAGEMENT (admin only) -->
+        <div class="section" id="staffManagementSection" style="margin-top: 0; margin-bottom: 30px; display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px;">
+                <h2 style="font-size: 18px; font-weight: 700;">
+                    Staff Management
+                    <span id="staffCount" style="display:inline-block; background:#0f766e; color:#fff; font-size:12px; font-weight:700; border-radius:999px; padding:2px 9px; margin-left:8px; vertical-align:middle;">0</span>
+                </h2>
+            </div>
+
+            <table id="staffTable">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Status</th>
+                        <th>Last Login</th>
+                        <th style="width: 120px;">Action</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamically populated by loadStaffManagement() in script.js -->
+                </tbody>
+            </table>
+        </div>
+
+        <!-- REMOVAL HISTORY (admin only) -->
+        <div class="section" id="staffHistorySection" style="margin-top: 0; margin-bottom: 30px; display: none;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 16px; flex-wrap: wrap; gap: 12px;">
+                <h2 style="font-size: 18px; font-weight: 700;">
+                    Removal History
+                    <span id="staffHistoryCount" style="display:inline-block; background:#64748b; color:#fff; font-size:12px; font-weight:700; border-radius:999px; padding:2px 9px; margin-left:8px; vertical-align:middle;">0</span>
+                </h2>
+                <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+                    <input type="search" id="staffHistorySearch" placeholder="Search name, email, reason..." autocomplete="off" style="max-width: 260px;">
+                    <button type="button" id="exportStaffHistoryBtn" class="btn-icon" style="width:auto; padding:8px 14px;" title="Download as CSV">
+                        <i class="fa-solid fa-file-csv"></i> Export
+                    </button>
+                </div>
+            </div>
+
+            <table id="staffHistoryTable">
+                <thead>
+                    <tr>
+                        <th>Username</th>
+                        <th>Email</th>
+                        <th>Removed By</th>
+                        <th>Date Removed</th>
+                        <th>Reason</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamically populated by loadStaffHistory() in script.js -->
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- REMOVE STAFF MODAL -->
+    <div class="modal-overlay" id="removeStaffOverlay">
+        <div class="modal-card">
+            <div class="modal-header">
+                <h2>Remove Staff Account</h2>
+                <button class="close-modal-btn" onclick="closeRemoveStaffModal()">&times;</button>
+            </div>
+            <p id="removeStaffMessage" style="margin: 12px 0;"></p>
+            <label for="removeStaffReason" style="font-size: 13px; font-weight: 600;">Reason (optional)</label>
+            <textarea id="removeStaffReason" rows="3" maxlength="300" placeholder="e.g. Resigned, end of contract..." style="margin-top: 6px;"></textarea>
+            <div style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 16px;">
+                <button type="button" class="btn-icon" style="width:auto; padding:8px 16px;" onclick="closeRemoveStaffModal()">Cancel</button>
+                <button type="button" id="removeStaffConfirmBtn" class="btn-icon btn-cancel" style="width:auto; padding:8px 16px;" onclick="confirmRemoveStaff()">Remove</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUPABASE & SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+
+</body>
+
+</html>
