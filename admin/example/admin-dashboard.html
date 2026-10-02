@@ -1,0 +1,355 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Dentist Admin Dashboard</title>
+
+<link rel="stylesheet" href="style.css">
+
+</head>
+
+
+<body>
+
+
+<!-- SIDEBAR -->
+
+<div class="sidebar">
+
+<h2>Dental Admin</h2>
+
+<ul>
+
+<li>Dashboard</li><a href="appointments.html"></a>
+<li>Appointments</li>
+<li>Patients</li>
+<li>Calendar</li>
+<li>Dentists</li>
+<li>Reports</li>
+<li>Logout</li>
+
+</ul>
+
+</div>
+
+
+
+
+<!-- MAIN -->
+
+<div class="main">
+
+
+<div class="header">
+
+<h1>Dentist Appointment Dashboard</h1>
+
+<p>Admin Panel</p>
+
+</div>
+
+
+
+
+
+<!-- CARDS -->
+
+<div class="cards">
+
+
+<div class="card">
+
+<h3>Total Patients</h3>
+
+<p>245</p>
+
+</div>
+
+
+
+<div class="card">
+
+<h3>Today's Appointments</h3>
+
+<p id="appointmentCount">18</p>
+
+</div>
+
+
+
+
+<div class="card">
+
+<h3>Available Dentists</h3>
+
+<p>5</p>
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+<!-- APPOINTMENT FORM -->
+
+
+<div class="section">
+
+
+<h2>Schedule New Appointment</h2>
+
+
+
+<div class="form-group">
+
+
+<input 
+type="text" 
+id="clientName"
+placeholder="Client Name">
+
+
+
+<input 
+type="text" 
+id="phone"
+placeholder="Phone Number">
+
+
+
+<input 
+type="date" 
+id="date">
+
+
+
+<input 
+type="time" 
+id="time">
+
+
+
+
+
+<select id="treatment">
+
+
+<option>Treatment Type</option>
+
+<option>Cleaning</option>
+
+<option>Tooth Extraction</option>
+
+<option>Braces Consultation</option>
+
+<option>Dental Checkup</option>
+
+
+</select>
+
+
+
+<select id="dentist">
+
+
+<option>Select Dentist</option>
+
+<option>Dr. Smith</option>
+
+<option>Dr. Johnson</option>
+
+<option>Dr. Lee</option>
+
+
+</select>
+
+
+
+</div>
+
+
+
+
+<button id="addAppointment">
+
+Add Appointment
+
+</button>
+
+
+
+</div>
+
+
+
+
+
+
+
+
+<!-- CALENDAR -->
+
+
+<div class="section">
+
+
+<h2>Appointment Calendar</h2>
+
+
+<div class="calendar">
+
+
+
+<div class="calendar-header">
+
+<button>‹</button>
+
+<h2>July 2026</h2>
+
+<button>›</button>
+
+
+</div>
+
+
+
+
+<div class="calendar-weekdays">
+
+
+<div>Sun</div>
+<div>Mon</div>
+<div>Tue</div>
+<div>Wed</div>
+<div>Thu</div>
+<div>Fri</div>
+<div>Sat</div>
+
+
+</div>
+
+
+
+
+
+<div class="calendar-days">
+
+
+<div class="day inactive">28</div>
+
+<div class="day inactive">29</div>
+
+<div class="day inactive">30</div>
+
+
+<div class="day">1</div>
+
+<div class="day">2</div>
+
+<div class="day active">3</div>
+
+<div class="day">4</div>
+
+
+<div class="day">5</div>
+
+<div class="day">6</div>
+
+<div class="day">7</div>
+
+
+
+</div>
+
+
+</div>
+
+
+</div>
+
+
+
+
+
+
+
+
+
+<!-- SCHEDULE TABLE -->
+
+
+<div class="section">
+
+
+<h2>Dentist Time Schedule</h2>
+
+
+
+<table id="scheduleTable">
+
+
+<tr>
+
+<th>Time</th>
+
+<th>Client</th>
+
+<th>Dentist</th>
+
+<th>Service</th>
+
+<th>Status</th>
+
+<th>Date</th>
+
+</tr>
+
+
+
+<tr>
+
+<td>09:00 AM</td>
+
+<td>Maria Santos</td>
+
+<td>Dr. Smith</td>
+
+<td>Cleaning</td>
+
+<td class="status">
+Confirmed
+</td>
+
+<td>07/08/2026</td>
+
+
+</tr>
+
+
+
+</table>
+
+
+</div>
+
+
+
+</div>
+
+
+
+
+<script src="script.js"></script>
+
+
+</body>
+
+</html>
