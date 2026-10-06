@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <!-- AUTH GATE: no dashboard flash before login. Runs before the page is drawn. -->
+    <style>html.auth-pending body { visibility: hidden; }</style>
+    <script>
+    (function () {
+        var hasSession = false;
+        try { hasSession = !!localStorage.getItem('sb-hjugipwtfilcqbwhncjx-auth-token'); } catch (e) {}
+        var onLogin = /login\.html$/i.test(location.pathname);
+        if (!onLogin && !hasSession) { location.replace('login.html'); return; }   // not signed in: never draw the page
+        if (hasSession) {
+            document.documentElement.classList.add('auth-pending');                 // hidden until the session is verified
+            setTimeout(function () { document.documentElement.classList.remove('auth-pending'); }, 6000);  // safety net
+        }
+    })();
+    </script>
+    <title>Schedules - Dental Admin</title>
+
+    <!-- Font Awesome Icons CDN -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+
+<body class="dashboard-body">
+
+    <!-- SIDEBAR -->
+    <div class="sidebar">
+        <div class="sidebar-brand">
+            <img src="image/logo-icon.png" alt="Oralux Dental Clinic logo">
+            <h2>Oralux Dental</h2>
+        </div>
+        <ul>
+            <li>
+                <a href="index.html">
+                    <i class="fa-solid fa-chart-line"></i>
+                    Dashboard
+                </a>
+            </li>
+            <li>
+                <a href="patient.html">
+                    <i class="fa-solid fa-user-group"></i>
+                    Patients
+                </a>
+            </li>
+            <li>
+                <a href="history.html" class="active">
+                    <i class="fa-solid fa-calendar-days"></i>
+                    Appointment Schedule
+                </a>
+            </li>
+            <li>
+                <a href="reports.html">
+                    <i class="fa-solid fa-chart-pie"></i>
+                    Reports
+                </a>
+            </li>
+            <li>
+                <a href="documents.html">
+                    <i class="fa-solid fa-file-waveform"></i>
+                    Prescriptions &amp; Certificates
+                </a>
+            </li>
+            <li id="staffNavItem" style="display: none;"><a href="staff.html"><i class="fa-solid fa-user-shield"></i> Staff <span class="nav-badge" id="navPendingBadge" style="display: none;">0</span></a></li>
+            <li>
+                <a href="#" onclick="event.preventDefault(); logout();">
+                    <i class="fa-solid fa-right-from-bracket"></i>
+                    Logout
+                </a>
+            </li>
+        </ul>
+    </div>
+
+    <!-- MAIN -->
+    <div class="main">
+
+        <!-- HEADER -->
+        <div class="header">
+            <h1>Appointment Schedules</h1>
+            <p>Book new appointments and select a date from the calendar to view scheduled patients</p>
+        </div>
+
+        <span id="bookAppointment"></span>
+        <!-- APPOINTMENT CREATION FORM -->
+        <div class="section appointment-card">
+            <div class="card-title">
+                <i class="fa-solid fa-plus-circle"></i>
+                <h2 id="formCardTitle">Book New Appointment</h2>
+            </div>
+
+            <form id="appointmentForm">
+                <div class="form-grid">
+                    
+                    <!-- Client Name -->
+                    <div class="input-field-group">
+                        <label for="clientName">Patient Name</label>
+                        <div class="input-icon-box">
+                            <i class="fa-solid fa-user"></i>
+                            <input type="text" id="clientName" placeholder="e.g. John Doe" required>
+                        </div>
+                    </div>
+
+                    <!-- Phone Number -->
+                    <div class="input-field-group">
+                        <label for="phone">Mobile Number</label>
+                        <div class="input-icon-box">
+                            <i class="fa-solid fa-phone"></i>
+                            <input type="tel" id="phone" placeholder="e.g. 09123456789" maxlength="11"
+                                   inputmode="numeric" pattern="09[0-9]{9}"
+                                   title="Mobile number must start with 09 and have 11 digits (e.g. 09123456789)" required>
+                        </div>
+                    </div>
+
+                    <!-- Gender -->
+                    <div class="input-field-group">
+                        <label for="gender">Gender</label>
+                        <div class="input-icon-box">
+                            <i class="fa-solid fa-venus-mars"></i>
+                            <select id="gender" required>
+                                <option value="" disabled selected>Select Gender...</option>
+                                <option value="Male">Male</option>
+                                <option value="Female">Female</option>
+                                <option value="Other">Other</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Birthday -->
+                    <div class="input-field-group">
+                        <label for="birthdayMonth">Birthday</label>
+                        <div class="input-icon-box">
+                            <i class="fa-solid fa-cake-candles"></i>
+                            <div class="birthday-select-group">
+                                <select id="birthdayMonth" required>
+                                    <option value="" disabled selected>Month</option>
+                                </select>
+                                <select id="birthdayDay" required>
+                                    <option value="" disabled selected>Day</option>
+                                </select>
+                                <select id="birthdayYear" required>
+                                    <option value="" disabled selected>Year</option>
+                                </select>
+                            </div>
+                            <input type="hidden" id="birthday">
+                        </div>
+                    </div>
+
+                    <!-- Address -->
+                    <div class="input-field-group">
+                        <label for="address">Address</label>
+                        <div class="input-icon-box">
+                            <i class="fa-solid fa-location-dot"></i>
+                            <input type="text" id="address" placeholder="e.g. 123 Main St, City" required>
+                        </div>
+                    </div>
+
+                    <!-- Treatment/Service Select -->
+                    <div class="input-field-group">
+                        <label for="treatment">Select Service</label>
+                        <div class="input-icon-box">
+                            <i class="fa-solid fa-tooth"></i>
+                            <select id="treatment" required>
+                                <option value="">Select Treatment...</option>
+                                <option value="Dental Consultation">Dental Consultation</option>
+                                <option value="Cleaning">Cleaning</option>
+                                <option value="Pasta">Pasta</option>
+                                <option value="Extraction">Extraction</option>
+                                <option value="Braces">Braces</option>
+                                <option value="Wisdom Tooth Removal">Wisdom Tooth Removal</option>
+                                <option value="Teeth Whitening">Teeth Whitening</option>
+                                <option value="Veneers">Veneers</option>
+                                <option value="Dentures">Dentures</option>
+                                <option value="Dental Crown/Fixed Bridge">Dental Crown/Fixed Bridge</option>
+                                <option value="Root Canal Treatment">Root Canal Treatment</option>
+                                <option value="Others">Others</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Tooth Number — shown only for Pasta / Extraction / Wisdom Tooth Removal -->
+                    <div class="input-field-group" id="toothNumberGroup" style="display: none;">
+                        <label for="toothNumber">Tooth Number</label>
+                        <div class="input-icon-box">
+                            <i class="fa-solid fa-tooth"></i>
+                            <select id="toothNumber">
+                                <option value="">Select Tooth...</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    <!-- Others — shown only when "Others" is selected -->
+                    <div class="input-field-group" id="otherTreatmentGroup" style="display: none;">
+                        <label for="otherTreatment">Please Specify Treatment</label>
+                        <div class="input-icon-box">
+                            <i class="fa-solid fa-pen"></i>
+                            <input type="text" id="otherTreatment" placeholder="e.g. Fluoride Treatment">
+                        </div>
+                    </div>
+
+                    <!-- Braces payment plan: shown only when "Braces" is selected -->
+                    <div class="input-field-group braces-plan-group" id="bracesPlanGroup" style="display: none; grid-column: 1 / -1;">
+                        <label>Braces Payment Plan</label>
+                        <div class="braces-plan-fields">
+                            <div class="braces-plan-field">
+                                <span class="braces-plan-label">Total Braces Bill</span>
+                                <div class="price-field">
+                                    <span class="currency-sign">&#8369;</span>
+                                    <input type="number" id="bracesTotal" class="price-input" min="0" step="0.01" placeholder="50000">
+                                </div>
+                            </div>
+                            <div class="braces-plan-field">
+                                <span class="braces-plan-label">Payment per Adjustment Visit</span>
+                                <div class="price-field">
+                                    <span class="currency-sign">&#8369;</span>
+                                    <input type="number" id="bracesPerVisit" class="price-input" min="0" step="0.01" placeholder="10000">
+                                </div>
+                            </div>
+                        </div>
+                        <p class="braces-plan-hint" id="bracesPlanHint">The patient pays this amount at every adjustment visit until the total is fully paid.</p>
+                    </div>
+
+                    <!-- Medical History intake — filled once per patient, not per visit -->
+                    <div class="input-field-group" style="grid-column: 1 / -1;">
+                        <label>Patient Medical History</label>
+                        <button type="button" id="openMedicalHistoryBtn" class="medhist-btn" onclick="openMedicalHistoryForm()">
+                            <i class="fa-solid fa-file-medical"></i> Fill Medical History Form
+                        </button>
+                    </div>
+
+                    <!-- Date Picker -->
+                    <div class="input-field-group">
+                        <label for="date">Appointment Date</label>
+                        <div class="input-icon-box">
+                            <i class="fa-solid fa-calendar"></i>
+                            <input type="date" id="date" lang="en-US" required>
+                        </div>
+                    </div>
+
+                    <!-- Time Picker -->
+                    <div class="input-field-group">
+                        <label for="time">Appointment Time</label>
+                        <div class="input-icon-box">
+                            <i class="fa-solid fa-clock"></i>
+                            <input type="time" id="time" required>
+                        </div>
+                    </div>
+
+                </div>
+
+                <!-- FORM SUBMIT ACTION -->
+                <div class="form-actions-bar">
+                    <button type="submit" id="addAppointmentBtn" class="add-appointment-btn">
+                        <i class="fa-solid fa-plus"></i> Add Appointment
+                    </button>
+                </div>
+            </form>
+        </div>
+
+        <!-- DYNAMIC CALENDAR SECTION -->
+        <div class="section" style="margin-top: 24px;">
+            <div class="calendar">
+                <!-- MONTH NAVIGATION -->
+                <div class="calendar-header">
+                    <h2>Appointment Calendar</h2>
+                    <div class="calendar-nav">
+                        <button id="prevMonthBtn" class="nav-btn" type="button">
+                            <i class="fa-solid fa-chevron-left"></i>
+                        </button>
+                        <h2 id="calendarMonthYear">Loading...</h2>
+                        <button id="nextMonthBtn" class="nav-btn" type="button">
+                            <i class="fa-solid fa-chevron-right"></i>
+                        </button>
+                    </div>
+                </div>
+
+                <!-- WEEKDAYS GRID (7 COLUMNS) -->
+                <div class="calendar-weekdays">
+                    <div>Sun</div>
+                    <div>Mon</div>
+                    <div>Tue</div>
+                    <div>Wed</div>
+                    <div>Thu</div>
+                    <div>Fri</div>
+                    <div>Sat</div>
+                </div>
+
+                <!-- DAYS GRID (7 COLUMNS - POPULATED DYNAMICALLY) -->
+                <div class="calendar-days" id="calendarDays">
+                    <!-- Dynamic day elements generated by script.js -->
+                </div>
+            </div>
+        </div>
+
+        <!-- SCHEDULE TABLE & FILTER HEADER -->
+        <div class="section" style="margin-top: 30px;">
+            <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; flex-wrap: wrap; gap: 12px;">
+                <div>
+                    <h2 id="selectedDateTitle" style="font-size: 18px; font-weight: 700;">All Scheduled Appointments</h2>
+                    <p id="selectedDateSubtitle" style="font-size: 13px; color: var(--text-muted); margin-top: 2px;">
+                        Click any day on the calendar above to filter by date
+                    </p>
+                </div>
+                
+                <button id="clearDateFilterBtn" style="display: none; padding: 8px 16px; font-size: 13px; background-color: var(--primary-color); color: #ffffff; border: none; border-radius: 8px; cursor: pointer;">
+                    <i class="fa-solid fa-xmark"></i> Show All Days
+                </button>
+            </div>
+
+            <!-- SEARCH: patient name or appointment date -->
+            <div class="schedule-search">
+                <i class="fa-solid fa-magnifying-glass"></i>
+                <input type="search" id="scheduleSearch" autocomplete="off"
+                       placeholder="Search by patient name or date...">
+            </div>
+            <p class="schedule-search-hint">Try a name (<em>Jaylord</em>), a date (<em>Sept 25</em>, <em>2026-09-25</em>, <em>9/25/2026</em>) or both.</p>
+
+            <div class="patient-filter-tabs" id="scheduleFilterTabs">
+                <button type="button" class="patient-filter-tab active" data-filter="all">All <span class="pf-count" id="sfCountAll">0</span></button>
+                <button type="button" class="patient-filter-tab" data-filter="pending">Pending <span class="pf-count" id="sfCountPending">0</span></button>
+                <button type="button" class="patient-filter-tab" data-filter="completed">Completed <span class="pf-count" id="sfCountCompleted">0</span></button>
+                <button type="button" class="patient-filter-tab" data-filter="canceled">Canceled <span class="pf-count" id="sfCountCanceled">0</span></button>
+            </div>
+
+            <table id="scheduleTable">
+                <thead>
+                    <tr>
+                        <th>Time</th>
+                        <th>Client</th>
+                        <th>Service</th>
+                        <th>Status</th>
+                        <th>Date</th>
+                        <th style="text-align: center;">Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <!-- Dynamic row structure injected by script.js (renderTableRows):
+                    <tr>
+                        <td>11:11</td>
+                        <td>KALBO</td>
+                        <td>Cleaning</td>
+                        <td><span class="badge badge-completed">Completed</span></td>
+                        <td>2026-08-26</td>
+                        <td>
+                            <div class="action-buttons">
+                                <button class="btn-icon btn-view" onclick="viewPatientProfile(0)" title="Patient History">
+                                    <i class="fa-solid fa-id-card"></i>
+                                </button>
+                                <button class="btn-icon btn-edit" onclick="editAppointment(0)" title="Edit Appointment">
+                                    <i class="fa-solid fa-pen-to-square"></i>
+                                </button>
+                                <button class="btn-icon btn-cancel" onclick="cancelAppointment(0)" title="Cancel Appointment">
+                                    <i class="fa-solid fa-circle-xmark"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                    Patient History opens an in-page modal (built by script.js) with the
+                    patient's full appointment history, items used, and price — it does not
+                    navigate away from this page.
+                    -->
+                </tbody>
+            </table>
+        </div>
+
+    </div>
+
+    <!-- MEDICAL HISTORY MODAL -->
+    <div class="modal-overlay" id="medicalHistoryOverlay" onclick="if(event.target===this) closeMedicalHistoryForm()">
+        <div class="modal-card mh-modal-card">
+            <div class="modal-header">
+                <h2><i class="fa-solid fa-file-medical"></i> Patient Medical History</h2>
+                <button class="close-modal-btn" onclick="closeMedicalHistoryForm()">&times;</button>
+            </div>
+
+            <p class="mh-modal-subtitle">For <strong id="mhPatientNameLabel">—</strong>. This is saved to the patient's record, not just this visit — filling it again later updates the same record.</p>
+
+            <div class="mh-section-title">Patient Information</div>
+            <div class="mh-grid">
+                <div class="mh-field">
+                    <label for="mhHeight">Height</label>
+                    <input type="text" id="mhHeight" placeholder="e.g. 5'7">
+                </div>
+                <div class="mh-field">
+                    <label for="mhWeight">Weight</label>
+                    <input type="text" id="mhWeight" placeholder="e.g. 68kg">
+                </div>
+                <div class="mh-field">
+                    <label for="mhCivilStatus">Civil Status</label>
+                    <select id="mhCivilStatus">
+                        <option value="">Select...</option>
+                        <option value="Single">Single</option>
+                        <option value="Married">Married</option>
+                        <option value="Widowed">Widowed</option>
+                        <option value="Separated">Separated</option>
+                        <option value="Other">Other</option>
+                    </select>
+                </div>
+                <div class="mh-field">
+                    <label for="mhOccupation">Occupation</label>
+                    <input type="text" id="mhOccupation">
+                </div>
+                <div class="mh-field">
+                    <label for="mhReligion">Religion</label>
+                    <input type="text" id="mhReligion">
+                </div>
+                <div class="mh-field">
+                    <label for="mhNationality">Nationality</label>
+                    <input type="text" id="mhNationality" placeholder="Filipino">
+                </div>
+                <div class="mh-field" style="grid-column: 1 / -1;">
+                    <label for="mhReferredBy">Referred By</label>
+                    <input type="text" id="mhReferredBy">
+                </div>
+            </div>
+
+            <div class="mh-section-title">Medical History</div>
+            <div class="mh-qa-list">
+                <div class="mh-qa-row">
+                    <label>1. Are you in good health?</label>
+                    <select id="mhGoodHealth"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
+                </div>
+                <div class="mh-qa-row">
+                    <label>2. Are you under medical treatment now?</label>
+                    <select id="mhUnderTreatment"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
+                </div>
+                <div class="mh-field"><label for="mhUnderTreatmentDetails">If so, condition being treated</label><input type="text" id="mhUnderTreatmentDetails"></div>
+
+                <div class="mh-qa-row">
+                    <label>3. Ever had serious illness or surgical operation?</label>
+                    <select id="mhIllnessSurgery"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
+                </div>
+                <div class="mh-field"><label for="mhIllnessSurgeryDetails">If so, what illness or operation</label><input type="text" id="mhIllnessSurgeryDetails"></div>
+
+                <div class="mh-qa-row">
+                    <label>4. Have you ever been hospitalized?</label>
+                    <select id="mhHospitalized"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
+                </div>
+                <div class="mh-field"><label for="mhHospitalizedDetails">If so, please specify</label><input type="text" id="mhHospitalizedDetails"></div>
+
+                <div class="mh-qa-row">
+                    <label>5. Taking any prescription/non-prescription medication?</label>
+                    <select id="mhMedication"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
+                </div>
+                <div class="mh-field"><label for="mhMedicationDetails">If so, please specify</label><input type="text" id="mhMedicationDetails"></div>
+
+                <div class="mh-qa-row">
+                    <label>6. Do you use tobacco products?</label>
+                    <select id="mhTobacco"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
+                </div>
+                <div class="mh-qa-row">
+                    <label>7. Do you use alcohol, cocaine, or other dangerous drugs?</label>
+                    <select id="mhAlcoholDrugs"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option></select>
+                </div>
+            </div>
+
+            <div class="mh-section-title">8. Are you allergic to any of the following?</div>
+            <div class="mh-checkbox-grid">
+                <label><input type="checkbox" id="allergyLocalAnesthetic"> Local Anesthetic (Lidocaine)</label>
+                <label><input type="checkbox" id="allergyPenicillin"> Penicillin, Antibiotics</label>
+                <label><input type="checkbox" id="allergySulfurDrugs"> Sulfur Drugs</label>
+                <label><input type="checkbox" id="allergyAspirin"> Aspirin</label>
+                <label><input type="checkbox" id="allergyLatex"> Latex</label>
+                <label class="mh-other-check"><input type="checkbox" id="allergyOtherCheck"> Other: <input type="text" id="allergyOtherText" class="mh-inline-text"></label>
+            </div>
+
+            <div class="mh-grid" style="margin-top: 14px;">
+                <div class="mh-field">
+                    <label for="mhBleedingTime">9. Bleeding Time</label>
+                    <input type="text" id="mhBleedingTime">
+                </div>
+                <div class="mh-field">
+                    <label for="mhBloodType">11. Blood Type</label>
+                    <select id="mhBloodType">
+                        <option value="">—</option>
+                        <option>A+</option><option>A-</option>
+                        <option>B+</option><option>B-</option>
+                        <option>AB+</option><option>AB-</option>
+                        <option>O+</option><option>O-</option>
+                        <option>Unknown</option>
+                    </select>
+                </div>
+                <div class="mh-field">
+                    <label for="mhBloodPressure">12. Blood Pressure</label>
+                    <input type="text" id="mhBloodPressure" placeholder="e.g. 120/80">
+                </div>
+            </div>
+
+            <!-- Only shown when Gender = Female (see syncWomenOnlySection in script.js) -->
+            <div id="mhWomenOnlySection" style="display: none;">
+            <div class="mh-section-title">10. For Women Only</div>
+            <div class="mh-qa-list">
+                <div class="mh-qa-row">
+                    <label>Are you pregnant?</label>
+                    <select id="mhPregnant"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option><option value="N/A">N/A</option></select>
+                </div>
+                <div class="mh-qa-row">
+                    <label>Are you nursing?</label>
+                    <select id="mhNursing"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option><option value="N/A">N/A</option></select>
+                </div>
+                <div class="mh-qa-row">
+                    <label>Are you taking birth control pills?</label>
+                    <select id="mhBirthControl"><option value="">—</option><option value="Yes">Yes</option><option value="No">No</option><option value="N/A">N/A</option></select>
+                </div>
+            </div>
+            </div>
+
+            <div class="mh-section-title">13. Do you have or have you had any of the following?</div>
+            <div class="mh-checkbox-grid mh-checkbox-grid-3col">
+                <label><input type="checkbox" class="mh-condition" value="High Blood Pressure"> High Blood Pressure</label>
+                <label><input type="checkbox" class="mh-condition" value="Low Blood Pressure"> Low Blood Pressure</label>
+                <label><input type="checkbox" class="mh-condition" value="Epilepsy / Convulsions"> Epilepsy / Convulsions</label>
+                <label><input type="checkbox" class="mh-condition" value="AIDS or HIV Infection"> AIDS or HIV Infection</label>
+                <label><input type="checkbox" class="mh-condition" value="Sexually Transmitted Disease"> Sexually Transmitted Disease</label>
+                <label><input type="checkbox" class="mh-condition" value="Stomach Troubles / Ulcers"> Stomach Troubles / Ulcers</label>
+                <label><input type="checkbox" class="mh-condition" value="Fainting Seizure"> Fainting Seizure</label>
+                <label><input type="checkbox" class="mh-condition" value="Rapid Weight Loss"> Rapid Weight Loss</label>
+                <label><input type="checkbox" class="mh-condition" value="Radiation Therapy"> Radiation Therapy</label>
+                <label><input type="checkbox" class="mh-condition" value="Joint Replacement / Implant"> Joint Replacement / Implant</label>
+                <label><input type="checkbox" class="mh-condition" value="Heart Surgery"> Heart Surgery</label>
+
+                <label><input type="checkbox" class="mh-condition" value="Heart Disease"> Heart Disease</label>
+                <label><input type="checkbox" class="mh-condition" value="Heart Murmur"> Heart Murmur</label>
+                <label><input type="checkbox" class="mh-condition" value="Hepatitis / Liver Disease"> Hepatitis / Liver Disease</label>
+                <label><input type="checkbox" class="mh-condition" value="Rheumatic Fever"> Rheumatic Fever</label>
+                <label><input type="checkbox" class="mh-condition" value="Hay Fever / Allergies"> Hay Fever / Allergies</label>
+                <label><input type="checkbox" class="mh-condition" value="Respiratory Problems"> Respiratory Problems</label>
+                <label><input type="checkbox" class="mh-condition" value="Hepatitis / Jaundice"> Hepatitis / Jaundice</label>
+                <label><input type="checkbox" class="mh-condition" value="Tuberculosis"> Tuberculosis</label>
+                <label><input type="checkbox" class="mh-condition" value="Swollen Ankles"> Swollen Ankles</label>
+                <label><input type="checkbox" class="mh-condition" value="Kidney Disease"> Kidney Disease</label>
+                <label><input type="checkbox" class="mh-condition" value="Diabetes"> Diabetes</label>
+
+                <label><input type="checkbox" class="mh-condition" value="Arthritis / Rheumatism"> Arthritis / Rheumatism</label>
+                <label><input type="checkbox" class="mh-condition" value="Cancer / Tumors"> Cancer / Tumors</label>
+                <label><input type="checkbox" class="mh-condition" value="Anemia"> Anemia</label>
+                <label><input type="checkbox" class="mh-condition" value="Angina"> Angina</label>
+                <label><input type="checkbox" class="mh-condition" value="Asthma"> Asthma</label>
+                <label><input type="checkbox" class="mh-condition" value="Emphysema"> Emphysema</label>
+                <label><input type="checkbox" class="mh-condition" value="Bleeding Problems"> Bleeding Problems</label>
+                <label><input type="checkbox" class="mh-condition" value="Blood Diseases"> Blood Diseases</label>
+                <label><input type="checkbox" class="mh-condition" value="Head Injuries"> Head Injuries</label>
+                <label class="mh-other-check"><input type="checkbox" id="conditionsOtherCheck"> Other: <input type="text" id="conditionsOtherText" class="mh-inline-text"></label>
+            </div>
+
+            <label class="mh-consent">
+                <input type="checkbox" id="mhConsentConfirmed">
+                Patient/guardian confirms the information above is accurate to the best of their knowledge.
+            </label>
+
+            <div class="modal-footer">
+                <button class="btn-secondary" onclick="closeMedicalHistoryForm()">Cancel</button>
+                <button class="add-appointment-btn" onclick="saveMedicalHistory()"><i class="fa-solid fa-floppy-disk"></i> Save Medical History</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUPABASE & SCRIPTS -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script src="script.js"></script>
+
+</body>
+
+</html>
